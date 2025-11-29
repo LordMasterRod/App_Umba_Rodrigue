@@ -1,7 +1,7 @@
 # app.py
 import streamlit as st
 import pandas as pd
-from clustering import DynamicClusteringGeneralized
+from Clustering import DynamicClusteringGeneralized
 
 st.title("Nuée Dynamique - Clustering de Données Mixtes")
 
