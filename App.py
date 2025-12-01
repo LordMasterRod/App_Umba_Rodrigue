@@ -17,11 +17,9 @@ et choisit l'algorithme adapté :
 - **KPrototypes** pour données mixtes.
 """)
 
-# --- Sidebar: upload dataset ---
 st.sidebar.header("📁 Charger un dataset (CSV)")
 uploaded = st.sidebar.file_uploader("Upload CSV", type=["csv"])
 
-# --- Load sample if no upload ---
 if not uploaded:
     st.info("Dépose un fichier CSV pour commencer. Exemple inclus : `dataset_mixed.csv`.")
     sample = pd.read_csv("dataset_mixed.csv")
@@ -29,31 +27,23 @@ if not uploaded:
     st.dataframe(sample.head())
     st.stop()
 
-# --- Load uploaded data ---
+# Load data
 df = pd.read_csv(uploaded)
 st.subheader("📄 Aperçu des données")
 st.dataframe(df.head())
 
-# --- Auto detect feature types ---
+# Auto detect feature types
 numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
 categorical_cols = [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c])]
 
 st.sidebar.markdown("### 🔎 Détection automatique des types")
-st.sidebar.write(f"Colonnes numériques détectées: {numeric_cols}")
-st.sidebar.write(f"Colonnes catégorielles détectées: {categorical_cols}")
+st.sidebar.write(f"Numeric cols detected: {numeric_cols}")
+st.sidebar.write(f"Categorical cols detected: {categorical_cols}")
 
-# --- Allow user override ---
+# Allow user override
 st.sidebar.markdown("### ✏️ Override (optionnel)")
-user_numeric = st.sidebar.multiselect(
-    "Sélectionner colonnes numériques",
-    options=df.columns.tolist(),
-    default=numeric_cols
-)
-user_categorical = st.sidebar.multiselect(
-    "Sélectionner colonnes catégorielles",
-    options=df.columns.tolist(),
-    default=categorical_cols
-)
+user_numeric = st.sidebar.multiselect("Sélectionner colonnes numériques", options=df.columns.tolist(), default=numeric_cols)
+user_categorical = st.sidebar.multiselect("Sélectionner colonnes catégorielles", options=df.columns.tolist(), default=categorical_cols)
 
 use_numeric = user_numeric if user_numeric else numeric_cols
 use_categorical = user_categorical if user_categorical else categorical_cols
@@ -62,7 +52,7 @@ st.sidebar.markdown("---")
 n_clusters = st.sidebar.slider("Nombre de clusters (k)", 2, 10, 3)
 random_state = st.sidebar.number_input("Random state", min_value=0, max_value=9999, value=42)
 
-# --- Run clustering ---
+# Run clustering
 if st.button("🚀 Run clustering"):
     with st.spinner("Running clustering..."):
         auto = AutoClustering(
@@ -74,43 +64,40 @@ if st.button("🚀 Run clustering"):
 
         result_df, model_info = auto.fit(df)
 
-    st.success(f"Clustering terminé — méthode utilisée : {model_info['method']}")
+    st.success(f"Clustering done — method: {model_info['method']}")
 
-    # --- Show assignments ---
+    # Show assignments
     st.subheader("🔖 Assignations (index -> cluster)")
     st.dataframe(result_df[['cluster']].reset_index())
 
-    # --- Show prototypes/centroids/modes ---
+    # Show prototypes/centroids/modes
     st.subheader("📌 Prototypes / Centroids / Modes")
-    st.dataframe(pd.DataFrame(model_info['prototypes'], columns=model_info['prototypes_cols']))
+    st.dataframe(model_info['prototypes'])
 
     st.divider()
 
-    # --- Visualization ---
-    st.subheader("📈 Visualisation des clusters")
-
-    # Garder uniquement les colonnes numériques présentes dans result_df
-    numeric_in_df = [c for c in use_numeric if c in result_df.columns]
-    if len(numeric_in_df) >= 2:
-        x_col = st.selectbox("X axis", numeric_in_df, index=0)
-        y_col = st.selectbox("Y axis", numeric_in_df, index=1)
+    # Visualization
+    st.subheader("📈 Visualisation (adaptée)")
+    if len(use_numeric) >= 2:
+        x_col = st.selectbox("X axis", use_numeric, index=0)
+        y_col = st.selectbox("Y axis", use_numeric, index=1 if len(use_numeric) > 1 else 0)
 
         fig = plot_2d_scatter(
-            result_df,
-            x_col,
-            y_col,
-            model_info,
-            show_points=True,
-            show_prototypes=True
+            df=result_df,
+            x_col=x_col,
+            y_col=y_col,
+            cluster_col='cluster',
+            prototypes=model_info['prototypes'],
+            prototype_cols=[x_col, y_col]
         )
         st.pyplot(fig)
+
     else:
         st.info("Moins de 2 colonnes numériques : affichage des distributions catégorielles par cluster.")
         for cat in use_categorical:
             fig = plot_categorical_summary(result_df, cat)
             st.pyplot(fig)
 
-    # --- Download results ---
     st.download_button(
         "⬇️ Télécharger résultats (CSV)",
         data=result_df.to_csv(index=False),
