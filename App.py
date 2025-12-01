@@ -39,13 +39,21 @@ numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
 categorical_cols = [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c])]
 
 st.sidebar.markdown("### 🔎 Détection automatique des types")
-st.sidebar.write(f"Numeric cols detected: {numeric_cols}")
-st.sidebar.write(f"Categorical cols detected: {categorical_cols}")
+st.sidebar.write(f"Colonnes numériques détectées: {numeric_cols}")
+st.sidebar.write(f"Colonnes catégorielles détectées: {categorical_cols}")
 
 # --- Allow user override ---
 st.sidebar.markdown("### ✏️ Override (optionnel)")
-user_numeric = st.sidebar.multiselect("Sélectionner colonnes numériques", options=df.columns.tolist(), default=numeric_cols)
-user_categorical = st.sidebar.multiselect("Sélectionner colonnes catégorielles", options=df.columns.tolist(), default=categorical_cols)
+user_numeric = st.sidebar.multiselect(
+    "Sélectionner colonnes numériques",
+    options=df.columns.tolist(),
+    default=numeric_cols
+)
+user_categorical = st.sidebar.multiselect(
+    "Sélectionner colonnes catégorielles",
+    options=df.columns.tolist(),
+    default=categorical_cols
+)
 
 use_numeric = user_numeric if user_numeric else numeric_cols
 use_categorical = user_categorical if user_categorical else categorical_cols
@@ -66,7 +74,7 @@ if st.button("🚀 Run clustering"):
 
         result_df, model_info = auto.fit(df)
 
-    st.success(f"Clustering done — method: {model_info['method']}")
+    st.success(f"Clustering terminé — méthode utilisée : {model_info['method']}")
 
     # --- Show assignments ---
     st.subheader("🔖 Assignations (index -> cluster)")
@@ -80,9 +88,12 @@ if st.button("🚀 Run clustering"):
 
     # --- Visualization ---
     st.subheader("📈 Visualisation des clusters")
-    if len(use_numeric) >= 2:
-        x_col = st.selectbox("X axis", use_numeric, index=0)
-        y_col = st.selectbox("Y axis", use_numeric, index=1 if len(use_numeric) > 1 else 0)
+
+    # Garder uniquement les colonnes numériques présentes dans result_df
+    numeric_in_df = [c for c in use_numeric if c in result_df.columns]
+    if len(numeric_in_df) >= 2:
+        x_col = st.selectbox("X axis", numeric_in_df, index=0)
+        y_col = st.selectbox("Y axis", numeric_in_df, index=1)
 
         fig = plot_2d_scatter(
             result_df,
