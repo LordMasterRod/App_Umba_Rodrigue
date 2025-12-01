@@ -2,6 +2,6 @@ streamlit
 pandas
 numpy
 scikit-learn
-kmodes==0.12.2
+kmodes
 matplotlib
 seaborn
