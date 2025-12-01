@@ -16,17 +16,16 @@ def plot_2d_scatter(df, x_col, y_col, cluster_col='cluster', prototypes=None, pr
     fig, ax = plt.subplots(figsize=(8,6))
     palette = sns.color_palette("tab10", n_colors=df[cluster_col].nunique())
 
-    # Plot points
+    # Plot dataset points
     for cl in sorted(df[cluster_col].unique()):
         pts = df[df[cluster_col] == cl]
         ax.scatter(pts[x_col], pts[y_col], s=50, alpha=0.7, label=f'Cluster {cl}', color=palette[cl])
 
     # Plot prototypes if provided
     if prototypes is not None and prototype_cols is not None:
-        ax.scatter(
-            prototypes[:, 0], prototypes[:, 1],
-            c='red', marker='X', s=200, label='Prototypes'
-        )
+        # Extract only the columns for X/Y axes
+        proto_pts = prototypes[:, [df.columns.get_loc(c) for c in prototype_cols]].astype(float)
+        ax.scatter(proto_pts[:, 0], proto_pts[:, 1], c='red', marker='X', s=200, label='Prototypes')
 
     ax.set_xlabel(x_col)
     ax.set_ylabel(y_col)
