@@ -6,16 +6,27 @@ import pandas as pd
 def plot_2d_scatter(df, x_col, y_col, model_info, show_points=True, show_prototypes=True):
     fig, ax = plt.subplots(figsize=(8,6))
     
+    # --- Scatter points ---
     if show_points:
-        clusters = df['cluster'].unique()
+        clusters = sorted(df['cluster'].unique())
         colors = sns.color_palette('tab10', n_colors=len(clusters))
         for cl, color in zip(clusters, colors):
             pts = df[df['cluster']==cl]
-            ax.scatter(pts[x_col], pts[y_col], label=f'Cluster {cl}', alpha=0.7, s=50, color=color)
+            if pts.empty:
+                continue
+            ax.scatter(
+                pts[x_col],
+                pts[y_col],
+                label=f'Cluster {cl}',
+                alpha=0.7,
+                s=50,
+                color=color
+            )
     
+    # --- Scatter prototypes ---
     if show_prototypes:
         prototypes = model_info['prototypes']
-        proto_cols = model_info['prototypes_cols']  # doit contenir toutes les colonnes dans l’ordre
+        proto_cols = model_info['prototypes_cols']
         x_idx = proto_cols.index(x_col)
         y_idx = proto_cols.index(y_col)
         
