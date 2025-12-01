@@ -74,14 +74,12 @@ if st.button("🚀 Run clustering"):
 
     # --- Show prototypes/centroids/modes ---
     st.subheader("📌 Prototypes / Centroids / Modes")
-    st.dataframe(model_info['prototypes'])
+    st.dataframe(pd.DataFrame(model_info['prototypes'], columns=model_info['prototypes_cols']))
 
     st.divider()
 
     # --- Visualization ---
     st.subheader("📈 Visualisation des clusters")
-
-    # If at least 2 numeric features available for plotting
     if len(use_numeric) >= 2:
         x_col = st.selectbox("X axis", use_numeric, index=0)
         y_col = st.selectbox("Y axis", use_numeric, index=1 if len(use_numeric) > 1 else 0)
@@ -91,13 +89,11 @@ if st.button("🚀 Run clustering"):
             x_col,
             y_col,
             model_info,
-            show_points=True,        # <-- affichage points
-            show_prototypes=True     # <-- affichage prototypes
+            show_points=True,
+            show_prototypes=True
         )
         st.pyplot(fig)
-
     else:
-        # For categorical only: show distributions per cluster
         st.info("Moins de 2 colonnes numériques : affichage des distributions catégorielles par cluster.")
         for cat in use_categorical:
             fig = plot_categorical_summary(result_df, cat)
